@@ -12,25 +12,12 @@ public class Area {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "nome", length = 100)
     private String nome;
-
-    @Column(name = "descricao", columnDefinition = "TEXT")
     private String descricao;
-
-    @Column(name = "regiao", length = 50)
     private String regiao;
-
-    @Column(name = "populacaoAprox")
     private int populacaoAprox;
-
-    @Column(name = "nivelRisco", length = 20)
     private String nivelRisco;
-
-    @Column(name = "prioridade", length = 20)
     private String prioridade;
-
-    @Column(name = "dataUltimaAtt")
     private LocalDateTime dataUltimaAtt;
 
     public Area() {
