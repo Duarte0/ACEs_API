@@ -16,25 +16,12 @@ public class Endereco {
     @JoinColumn(name = "area_id")
     private Area area;
 
-    @Column(name = "logradouro", length = 100)
     private String logradouro;
-
-    @Column(name = "numero", length = 20)
     private String numero;
-
-    @Column(name = "bairro", length = 50)
     private String bairro;
-
-    @Column(name = "cep", length = 10)
     private String cep;
-
-    @Column(name = "latitude", columnDefinition = "DECIMAL")
     private BigDecimal latitude;
-
-    @Column(name = "longitude", columnDefinition = "DECIMAL")
     private BigDecimal longitude;
-
-    @Column(name = "spolmovel")
     private Boolean spolmovel;
 
     public Endereco() {
