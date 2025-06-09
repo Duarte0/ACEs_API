@@ -16,22 +16,11 @@ public class Paciente {
     @JoinColumn(name = "endereco_id")
     private Endereco endereco;
 
-    @Column(name = "nome", length = 100)
     private String nome;
-
-    @Column(name = "dataNascimento")
     private LocalDate dataNascimento;
-
-    @Column(name = "sexo", length = 1)
     private Character sexo;
-
-    @Column(name = "cpf", length = 14)
     private String cpf;
-
-    @Column(name = "cartaoSUS", length = 20)
     private String cartaoSUS;
-
-    @Column(name = "telefone", length = 20)
     private String telefone;
 
     public Paciente() {
