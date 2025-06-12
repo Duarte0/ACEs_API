@@ -21,9 +21,9 @@ public record AreaCreateDto(
         int populacaoAprox,
 
         @Size(max = 20, message = "O nível de risco não pode ter mais de 20 caracteres")
-        String nivelRisco,
+        Risco nivelRisco,
 
         @Size(max = 20, message = "A prioridade não pode ter mais de 20 caracteres")
-        String prioridade
+        Risco prioridade
 ) {
 }

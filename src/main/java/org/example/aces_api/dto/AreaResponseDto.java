@@ -8,8 +8,8 @@ public record AreaResponseDto(
         String descricao,
         String regiao,
         int populacaoAprox,
-        String nivelRisco,
-        String prioridade,
+        Risco nivelRisco,
+        Risco prioridade,
         LocalDateTime dataUltimaAtt
 ) {
 }
