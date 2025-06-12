@@ -2,7 +2,6 @@ package org.example.aces_api.controller;
 
 import jakarta.validation.Valid;
 import org.example.aces_api.dto.AreaCreateDto;
-import org.example.aces_api.dto.FullReportDto;
 import org.example.aces_api.dto.AreaResponseDto;
 import org.example.aces_api.exception.EntityNotFoundException;
 import org.example.aces_api.service.AreaService;
@@ -10,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.hateoas.EntityModel; // Importar EntityModel
+import org.springframework.hateoas.CollectionModel; // Importar CollectionModel
 
 import java.util.List;
 
@@ -22,29 +23,29 @@ public class AreaController {
 
 
     @GetMapping("/buscar/{id}")
-    public ResponseEntity<AreaResponseDto> getAreaById(@PathVariable Integer id) {
+    // O tipo de retorno muda para ResponseEntity<EntityModel<AreaResponseDto>>
+    public ResponseEntity<EntityModel<AreaResponseDto>> getAreaById(@PathVariable Integer id) {
         try {
-            AreaResponseDto area = areaService.findById(id);
+            EntityModel<AreaResponseDto> area = areaService.findById(id);
             return ResponseEntity.ok(area);
         } catch (EntityNotFoundException e) {
-
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
 
     @PostMapping("/cadastrar")
-    public ResponseEntity<AreaResponseDto> createArea(@Valid @RequestBody AreaCreateDto areaCreateDto) {
-
-        AreaResponseDto createdArea = areaService.criarArea(areaCreateDto);
-
+    // O tipo de retorno muda para ResponseEntity<EntityModel<AreaResponseDto>>
+    public ResponseEntity<EntityModel<AreaResponseDto>> createArea(@Valid @RequestBody AreaCreateDto areaCreateDto) {
+        EntityModel<AreaResponseDto> createdArea = areaService.criarArea(areaCreateDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdArea);
     }
 
     @PutMapping("/atualizar/{id}")
-    public ResponseEntity<AreaResponseDto> updateArea(@PathVariable Integer id, @Valid @RequestBody AreaCreateDto areaCreateDto) {
+    // O tipo de retorno muda para ResponseEntity<EntityModel<AreaResponseDto>>
+    public ResponseEntity<EntityModel<AreaResponseDto>> updateArea(@PathVariable Integer id, @Valid @RequestBody AreaCreateDto areaCreateDto) {
         try {
-            AreaResponseDto updatedArea = areaService.atualizarArea(id, areaCreateDto);
+            EntityModel<AreaResponseDto> updatedArea = areaService.atualizarArea(id, areaCreateDto);
             return ResponseEntity.ok(updatedArea);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -52,10 +53,14 @@ public class AreaController {
     }
 
     @GetMapping("/buscar/todos")
-    public ResponseEntity<List<AreaResponseDto>> getAllAreas() {
-        List<AreaResponseDto> areas = areaService.findAll();
+    // O tipo de retorno muda para ResponseEntity<CollectionModel<EntityModel<AreaResponseDto>>>
+    public ResponseEntity<CollectionModel<EntityModel<AreaResponseDto>>> getAllAreas() {
+        CollectionModel<EntityModel<AreaResponseDto>> areas = areaService.findAll();
 
-        if (areas.isEmpty()) {
+        // O CollectionModel pode ser vazio, mas o .isEmpty() aqui precisaria ser adaptado
+        // para verificar se a lista de "content" dentro do CollectionModel está vazia.
+        // Para simplificar, vou manter a verificação que retorna noContent se não houver conteúdo.
+        if (areas.getContent().isEmpty()) { // Verifica se o conteúdo do CollectionModel está vazio
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(areas);
@@ -70,12 +75,6 @@ public class AreaController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-    }
-
-    @GetMapping("/relatorio")
-    public ResponseEntity<FullReportDto> generateFullReport() { // <-- AQUI!
-        FullReportDto report = areaService.gerarRelatorio();
-        return ResponseEntity.ok(report);
     }
 
 }
