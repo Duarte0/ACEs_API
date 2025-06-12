@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface BaseMapper<E, D> {
 
-    BaseMapper INSTANCE = Mappers.getMapper(BaseMapper.class);
+//    BaseMapper INSTANCE = Mappers.getMapper(BaseMapper.class);
 
     D toDto(E entity);
     E toEntity(D dto);
