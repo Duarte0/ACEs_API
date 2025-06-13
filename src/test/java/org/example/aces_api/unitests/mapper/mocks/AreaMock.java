@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MockArea {
+public class AreaMock {
 
     public Area mockEntity() {
         return mockEntity(0);

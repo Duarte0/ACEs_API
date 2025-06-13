@@ -4,7 +4,7 @@ import org.example.aces_api.dto.AreaCreateDto;
 import org.example.aces_api.dto.AreaResponseDto;
 import org.example.aces_api.model.entity.Area;
 import org.example.aces_api.mapper.AreaMapper; // Importe sua interface de mapper
-import org.example.aces_api.unitests.mapper.mocks.MockArea;
+import org.example.aces_api.unitests.mapper.mocks.AreaMock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers; // Importe esta classe para obter a instância do mapper
@@ -16,13 +16,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AreaMapperTest {
 
     private AreaMapper mapper;
-    private MockArea inputObject;
+    private AreaMock inputObject;
 
     @BeforeEach
     public void setup() {
         // Obter a instância do mapper gerada pelo MapStruct
         mapper = Mappers.getMapper(AreaMapper.class);
-        inputObject = new MockArea();
+        inputObject = new AreaMock();
     }
 
     @Test
