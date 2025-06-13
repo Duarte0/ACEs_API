@@ -1,49 +1,64 @@
 package org.example.aces_api.service;
 
 import org.example.aces_api.dto.AreaCreateDto;
-import org.example.aces_api.dto.FullReportDto;
 import org.example.aces_api.dto.AreaResponseDto;
-import org.example.aces_api.dto.RegionalReportDto;
+import org.example.aces_api.dto.RelatorioDTO;
 import org.example.aces_api.exception.EntityNotFoundException;
 import org.example.aces_api.mapper.AreaMapper;
 import org.example.aces_api.model.entity.Area;
 import org.example.aces_api.model.repository.AreaRepository;
+import org.example.aces_api.model.repository.CasoAedesRepository;
+import org.example.aces_api.model.repository.FocoAedesRepository;
+import org.example.aces_api.model.repository.VisitaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class AreaService {
 
     @Autowired
-    private AreaRepository repository;
+    private AreaRepository areaRepository;
+    @Autowired
+    private VisitaRepository visitaRepository;
+    @Autowired
+    private CasoAedesRepository casoAedesRepository;
+    @Autowired
+    private FocoAedesRepository focoAedesRepository;
 
     @Autowired
     private AreaMapper mapper;
 
+    public AreaService(AreaRepository areaRepository, VisitaRepository visitaRepository,
+                       CasoAedesRepository casoAedesRepository, FocoAedesRepository focoAedesRepository) {
+        this.areaRepository = areaRepository;
+        this.visitaRepository = visitaRepository;
+        this.casoAedesRepository = casoAedesRepository;
+        this.focoAedesRepository = focoAedesRepository;
+    }
+
     public AreaResponseDto findById(Integer id) {
-        var area = repository.findById(id)
+        var area = areaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
         return mapper.toDto(area);
     }
 
-    public AreaResponseDto criarArea(AreaCreateDto areaCreate){
+    public AreaResponseDto criarArea(AreaCreateDto areaCreate) {
 
         var entity = mapper.toEntity(areaCreate);
         entity.setDataUltimaAtt(LocalDateTime.now());
-        var area = repository.save(entity);
+        var area = areaRepository.save(entity);
 
         return mapper.toDto(area);
     }
 
-    public AreaResponseDto atualizarArea(Integer id, AreaCreateDto areaCreate){
+    public AreaResponseDto atualizarArea(Integer id, AreaCreateDto areaCreate) {
 
-        var entity = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
+        var entity = areaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
 
         entity.setNome(areaCreate.nome());
         entity.setDescricao(areaCreate.descricao());
@@ -53,108 +68,49 @@ public class AreaService {
         entity.setPrioridade(areaCreate.prioridade());
         entity.setDataUltimaAtt(LocalDateTime.now());
 
-        var area = repository.save(entity);
+        var area = areaRepository.save(entity);
         return mapper.toDto(area);
 
     }
 
-    public List<AreaResponseDto> findAll(){
-        return mapper.toDto(repository.findAll());
+    public List<AreaResponseDto> findAll() {
+        return mapper.toDto(areaRepository.findAll());
 
     }
 
-    public void excluirArea(Integer id){
+    public void excluirArea(Integer id) {
 
-        var area = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
+        var area = areaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
 
-        repository.delete(area);
+        areaRepository.delete(area);
     }
 
-    public FullReportDto gerarRelatorio(){
-        List<Area> allAreas = repository.findAll();
+    public RelatorioDTO gerarRelatorio(Long areaId, LocalDate dataInicio, LocalDate dataFim) {
 
-        if (allAreas.isEmpty()) {
-            return new FullReportDto(List.of(), 0.0, 0.0, 0L); // Retorna um relatório vazio
-        }
+        Area area = areaRepository.findById(Math.toIntExact(areaId))
+                .orElseThrow(() -> new RuntimeException("Área com ID " + areaId + " não encontrada."));
 
-        // --- Agrupar por Região e Calcular Métricas Regionais ---
-        Map<String, List<Area>> areasPorRegiao = allAreas.stream()
-                .collect(Collectors.groupingBy(Area::getRegiao));
+        LocalDateTime inicioPeriodo = dataInicio.atStartOfDay();
+        LocalDateTime fimPeriodo = dataFim.atTime(23, 59, 59);
 
-        List<RegionalReportDto> relatorioPorRegiao = areasPorRegiao.entrySet().stream()
-                .map(entry -> {
-                    String regiao = entry.getKey();
-                    List<Area> areasDaRegiao = entry.getValue();
+        int totalVisitas = visitaRepository.countVisitasByAreaAndPeriod(areaId, inicioPeriodo, fimPeriodo);
+        int totalCasos = casoAedesRepository.countDengueByAreaAndPeriod(areaId, inicioPeriodo, fimPeriodo);
+        int totalFocos = focoAedesRepository.countFocosByAreaAndPeriod(areaId, inicioPeriodo, fimPeriodo);
 
-                    List<String> niveisRisco = areasDaRegiao.stream()
-                            .map(Area::getNivelRisco)
-                            .collect(Collectors.toList());
+        double indiceDengue = (totalVisitas > 0) ? ((double) totalCasos / totalVisitas) * 1000 : 0.0;
 
-                    List<String> prioridades = areasDaRegiao.stream()
-                            .map(Area::getPrioridade)
-                            .collect(Collectors.toList());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String periodoFormatado = dataInicio.format(formatter) + " a " + dataFim.format(formatter);
 
-                    double mediaNivelRiscoRegional = areasDaRegiao.stream()
-                            .mapToInt(area -> {
-                                try {
-                                    return Integer.parseInt(area.getNivelRisco());
-                                } catch (NumberFormatException e) {
-                                    System.err.println("Nível de Risco inválido em região '" + regiao + "': " + area.getNivelRisco());
-                                    return 0;
-                                }
-                            })
-                            .average()
-                            .orElse(0.0);
-
-                    double mediaPrioridadeRegional = areasDaRegiao.stream()
-                            .mapToInt(area -> {
-                                try {
-                                    return Integer.parseInt(area.getPrioridade());
-                                } catch (NumberFormatException e) {
-                                    System.err.println("Prioridade inválida em região '" + regiao + "': " + area.getPrioridade());
-                                    return 0;
-                                }
-                            })
-                            .average()
-                            .orElse(0.0);
-
-                    long totalAreasNaRegiao = areasDaRegiao.size();
-
-                    return new RegionalReportDto(regiao, niveisRisco, prioridades,
-                            mediaNivelRiscoRegional, mediaPrioridadeRegional, totalAreasNaRegiao);
-                })
-                // ordenar as regiões no relatório final, pela média de risco
-                .sorted(Comparator.comparing(RegionalReportDto::mediaNivelRiscoRegional, Comparator.reverseOrder()))
-                .collect(Collectors.toList());
-
-        // --- Calcular Métricas Globais (para o resumo geral) ---
-        double mediaNivelRiscoGlobal = allAreas.stream()
-                .mapToInt(area -> {
-                    try {
-                        return Integer.parseInt(area.getNivelRisco());
-                    } catch (NumberFormatException e) {
-                        System.err.println("Nível de Risco inválido para cálculo de média global: " + area.getNivelRisco());
-                        return 0;
-                    }
-                })
-                .average()
-                .orElse(0.0);
-
-        double mediaPrioridadeGlobal = allAreas.stream()
-                .mapToInt(area -> {
-                    try {
-                        return Integer.parseInt(area.getPrioridade());
-                    } catch (NumberFormatException e) {
-                        System.err.println("Prioridade inválida para cálculo de média global: " + area.getPrioridade());
-                        return 0;
-                    }
-                })
-                .average()
-                .orElse(0.0);
-
-        long totalAreasGlobais = allAreas.size();
-
-        // --- Retornar o DTO Completo do Relatório ---
-        return new FullReportDto(relatorioPorRegiao, mediaNivelRiscoGlobal, mediaPrioridadeGlobal, totalAreasGlobais);
+        return new RelatorioDTO(
+                area.getId(),
+                area.getNome(),
+                periodoFormatado,
+                totalCasos,
+                totalVisitas,
+                totalFocos,
+                indiceDengue,
+                LocalDateTime.now()
+        );
     }
 }
