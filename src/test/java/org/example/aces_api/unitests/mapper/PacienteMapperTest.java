@@ -4,7 +4,7 @@ import org.example.aces_api.dto.PacienteCreateDto;
 import org.example.aces_api.dto.PacienteResponseDto;
 import org.example.aces_api.model.entity.Paciente;
 import org.example.aces_api.mapper.PacienteMapper;
-import org.example.aces_api.unitests.mapper.mocks.MockPaciente;
+import org.example.aces_api.unitests.mapper.mocks.PacienteMock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -16,12 +16,12 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PacienteMapperTest {
 
     private PacienteMapper mapper;
-    private MockPaciente inputObject;
+    private PacienteMock inputObject;
 
     @BeforeEach
     public void setup() {
         mapper = Mappers.getMapper(PacienteMapper.class);
-        inputObject = new MockPaciente();
+        inputObject = new PacienteMock();
     }
 
     @Test

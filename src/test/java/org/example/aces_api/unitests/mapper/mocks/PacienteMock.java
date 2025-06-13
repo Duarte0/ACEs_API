@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MockPaciente {
+public class PacienteMock {
 
     // Método auxiliar para criar um Endereco mock
     private Endereco mockEndereco(int id) {
