@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.example.aces_api.dto.AreaCreateDto;
 import org.example.aces_api.dto.FullReportDto;
 import org.example.aces_api.dto.AreaResponseDto;
+import org.example.aces_api.dto.RelatorioDTO;
 import org.example.aces_api.exception.EntityNotFoundException;
 import org.example.aces_api.service.AreaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -19,6 +22,10 @@ public class AreaController {
 
     @Autowired
     private AreaService areaService;
+
+    public AreaController(AreaService areaService) {
+        this.areaService = areaService;
+    }
 
 
     @GetMapping("/buscar/{id}")
@@ -72,10 +79,18 @@ public class AreaController {
         }
     }
 
-    @GetMapping("/relatorio")
-    public ResponseEntity<FullReportDto> generateFullReport() { // <-- AQUI!
-        FullReportDto report = areaService.gerarRelatorio();
-        return ResponseEntity.ok(report);
+    @GetMapping("/{id}/relatorio")
+    public ResponseEntity<RelatorioDTO> getRelatorioDaArea(@PathVariable Long id,
+                                                           @RequestParam(name = "dataInicio", required = false) String dataInicioStr,
+                                                           @RequestParam(name = "dataFim", required = false) String dataFimStr) {
+
+        LocalDate dataFim = (dataFimStr == null) ? LocalDate.now() : LocalDate.parse(dataFimStr);
+        LocalDate dataInicio = (dataInicioStr == null) ? LocalDate.now() : LocalDate.parse(dataInicioStr);
+
+        RelatorioDTO relatorio = areaService.gerarRelatorio(id, dataInicio, dataFim);
+
+        return ResponseEntity.ok(relatorio);
+
     }
 
 }
