@@ -1,6 +1,7 @@
 package org.example.aces_api.model.entity;
 
 import jakarta.persistence.*;
+import org.example.aces_api.dto.Sexo;
 
 import java.time.LocalDate;
 
@@ -9,7 +10,7 @@ import java.time.LocalDate;
 public class Paciente {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private int id;
 
     @ManyToOne
@@ -18,7 +19,7 @@ public class Paciente {
 
     private String nome;
     private LocalDate dataNascimento;
-    private Character sexo;
+    private Sexo sexo;
     private String cpf;
     private String cartaoSUS;
     private String telefone;
@@ -26,7 +27,7 @@ public class Paciente {
     public Paciente() {
     }
 
-    public Paciente(Endereco endereco, String nome, LocalDate dataNascimento, Character sexo, String cpf, String cartaoSUS, String telefone) {
+    public Paciente(Endereco endereco, String nome, LocalDate dataNascimento, Sexo sexo, String cpf, String cartaoSUS, String telefone) {
         this.endereco = endereco;
         this.nome = nome;
         this.dataNascimento = dataNascimento;
@@ -69,11 +70,11 @@ public class Paciente {
         this.dataNascimento = dataNascimento;
     }
 
-    public Character getSexo() {
+    public Sexo getSexo() {
         return sexo;
     }
 
-    public void setSexo(Character sexo) {
+    public void setSexo(Sexo sexo) {
         this.sexo = sexo;
     }
 
