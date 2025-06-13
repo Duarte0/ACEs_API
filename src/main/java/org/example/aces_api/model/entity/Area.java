@@ -1,6 +1,7 @@
 package org.example.aces_api.model.entity;
 
 import jakarta.persistence.*;
+import org.example.aces_api.dto.Risco;
 
 import java.time.LocalDateTime;
 
@@ -16,14 +17,14 @@ public class Area {
     private String descricao;
     private String regiao;
     private int populacaoAprox;
-    private String nivelRisco;
-    private String prioridade;
+    private Risco nivelRisco;
+    private Risco prioridade;
     private LocalDateTime dataUltimaAtt;
 
     public Area() {
     }
 
-    public Area(String nome, String descricao, String regiao, int populacaoAprox, String nivelRisco, String prioridade, LocalDateTime dataUltimaAtt) {
+    public Area(String nome, String descricao, String regiao, int populacaoAprox, Risco nivelRisco, Risco prioridade, LocalDateTime dataUltimaAtt) {
         this.nome = nome;
         this.descricao = descricao;
         this.regiao = regiao;
@@ -73,19 +74,19 @@ public class Area {
         this.populacaoAprox = populacaoAprox;
     }
 
-    public String getNivelRisco() {
+    public Risco getNivelRisco() {
         return nivelRisco;
     }
 
-    public void setNivelRisco(String nivelRisco) {
+    public void setNivelRisco(Risco nivelRisco) {
         this.nivelRisco = nivelRisco;
     }
 
-    public String getPrioridade() {
+    public Risco getPrioridade() {
         return prioridade;
     }
 
-    public void setPrioridade(String prioridade) {
+    public void setPrioridade(Risco prioridade) {
         this.prioridade = prioridade;
     }
 

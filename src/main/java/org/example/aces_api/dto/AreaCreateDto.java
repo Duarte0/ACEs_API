@@ -20,10 +20,10 @@ public record AreaCreateDto(
         @Min(value = 0, message = "A população aproximada não pode ser negativa")
         int populacaoAprox,
 
-        @Size(max = 20, message = "O nível de risco não pode ter mais de 20 caracteres")
-        String nivelRisco,
+        @NotNull(message = "O nível de risco é obrigatório")
+        Risco nivelRisco,
 
-        @Size(max = 20, message = "A prioridade não pode ter mais de 20 caracteres")
-        String prioridade
+        @NotNull(message = "O nível de risco é obrigatório")
+        Risco prioridade
 ) {
 }
