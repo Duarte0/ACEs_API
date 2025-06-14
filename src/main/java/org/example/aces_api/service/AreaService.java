@@ -1,5 +1,6 @@
 package org.example.aces_api.service;
 
+import org.example.aces_api.controller.AreaController; // Importar o controlador para referenciar os métodos
 import org.example.aces_api.dto.AreaCreateDto;
 import org.example.aces_api.dto.AreaResponseDto;
 import org.example.aces_api.dto.RelatorioDTO;
@@ -12,11 +13,19 @@ import org.example.aces_api.model.repository.FocoAedesRepository;
 import org.example.aces_api.model.repository.VisitaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.hateoas.EntityModel; 
+import org.springframework.hateoas.CollectionModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
+
 
 @Service
 public class AreaService {
@@ -41,25 +50,32 @@ public class AreaService {
         this.focoAedesRepository = focoAedesRepository;
     }
 
-    public AreaResponseDto findById(Integer id) {
-        var area = areaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
-        return mapper.toDto(area);
+      // Tipo de retorno alterado para EntityModel<AreaResponseDto>
+    public EntityModel<AreaResponseDto> findById(Integer id) {
+        var area = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
+        AreaResponseDto dto = mapper.toDto(area);
+        // Cria um EntityModel e adiciona o link de auto-referência
+        return EntityModel.of(dto,
+                linkTo(methodOn(AreaController.class).getAreaById(id)) // <-- ALTERADO PARA getAreaById
+                        .withSelfRel());
     }
 
-    public AreaResponseDto criarArea(AreaCreateDto areaCreate) {
-
+    public EntityModel<AreaResponseDto> criarArea(AreaCreateDto areaCreate){
         var entity = mapper.toEntity(areaCreate);
         entity.setDataUltimaAtt(LocalDateTime.now());
         var area = areaRepository.save(entity);
 
-        return mapper.toDto(area);
+        AreaResponseDto dto = mapper.toDto(area);
+        // Cria um EntityModel e adiciona o link para o recurso recém-criado
+        return EntityModel.of(dto,
+                linkTo(methodOn(AreaController.class).getAreaById(dto.id())).withSelfRel());
     }
 
-    public AreaResponseDto atualizarArea(Integer id, AreaCreateDto areaCreate) {
-
-        var entity = areaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
-
+  
+    // Tipo de retorno alterado para EntityModel<AreaResponseDto>
+    // Conforme solicitado anteriormente, este método não adiciona um link de auto-referência ao próprio recurso atualizado.
+    public EntityModel<AreaResponseDto> atualizarArea(Integer id, AreaCreateDto areaCreate){
+        var entity = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
         entity.setNome(areaCreate.nome());
         entity.setDescricao(areaCreate.descricao());
         entity.setRegiao(areaCreate.regiao());
@@ -67,24 +83,34 @@ public class AreaService {
         entity.setNivelRisco(areaCreate.nivelRisco());
         entity.setPrioridade(areaCreate.prioridade());
         entity.setDataUltimaAtt(LocalDateTime.now());
-
-        var area = areaRepository.save(entity);
-        return mapper.toDto(area);
-
+      
+        var area = repository.save(entity);
+        AreaResponseDto dto = mapper.toDto(area);
+        // Retorna o EntityModel sem adicionar link Self, como solicitado anteriormente
+        return EntityModel.of(dto);
     }
 
-    public List<AreaResponseDto> findAll() {
-        return mapper.toDto(areaRepository.findAll());
+    // Tipo de retorno alterado para CollectionModel<EntityModel<AreaResponseDto>>
+    public CollectionModel<EntityModel<AreaResponseDto>> findAll(){
+        // Mapeia cada Area para AreaResponseDto, então encapsula em EntityModel com link Self
+        List<EntityModel<AreaResponseDto>> areasComLinks = repository.findAll().stream()
+                .map(area -> {
+                    AreaResponseDto dto = mapper.toDto(area);
+                 return EntityModel.of(dto,
+                            linkTo(methodOn(AreaController.class).getAreaById(dto.id())).withSelfRel());
+                })
+                .collect(Collectors.toList());
 
+        // Retorna uma CollectionModel da lista de EntityModels, com um link Self para a própria coleção
+        return CollectionModel.of(areasComLinks,
+                linkTo(methodOn(AreaController.class).getAllAreas()).withSelfRel());
     }
-
-    public void excluirArea(Integer id) {
-
-        var area = areaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
-
-        areaRepository.delete(area);
-    }
-
+  
+    public void excluirArea(Integer id){
+        var area = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
+        repository.delete(area);
+      }
+  
     public RelatorioDTO gerarRelatorio(Long areaId, LocalDate dataInicio, LocalDate dataFim) {
 
         Area area = areaRepository.findById(Math.toIntExact(areaId))
