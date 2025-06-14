@@ -3,6 +3,7 @@ package org.example.aces_api.controller;
 import jakarta.validation.Valid;
 import org.example.aces_api.dto.AreaCreateDto;
 import org.example.aces_api.dto.AreaResponseDto;
+import org.example.aces_api.dto.RelatorioDTO;
 import org.example.aces_api.exception.EntityNotFoundException;
 import org.example.aces_api.service.AreaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,8 @@ import io.swagger.v3.oas.annotations.media.Schema; // Importar Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse; // Importar ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag; // Importar Tag
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -29,6 +32,11 @@ public class AreaController {
     @Autowired
     private AreaService areaService;
 
+  
+  public AreaController(AreaService areaService) {
+        this.areaService = areaService;
+    }
+  
     @GetMapping("/buscar/{id}")
     @Operation(summary = "Finds an Area by ID", description = "Finds an Area by ID",
             tags = {"Areas"}, // Associa a tag "Areas" a este endpoint
@@ -131,5 +139,19 @@ public class AreaController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+    }
+  
+  @GetMapping("/{id}/relatorio")
+    public ResponseEntity<RelatorioDTO> getRelatorioDaArea(@PathVariable Long id,
+                                                           @RequestParam(name = "dataInicio", required = false) String dataInicioStr,
+                                                           @RequestParam(name = "dataFim", required = false) String dataFimStr) {
+
+        LocalDate dataFim = (dataFimStr == null) ? LocalDate.now() : LocalDate.parse(dataFimStr);
+        LocalDate dataInicio = (dataInicioStr == null) ? LocalDate.now() : LocalDate.parse(dataInicioStr);
+
+        RelatorioDTO relatorio = areaService.gerarRelatorio(id, dataInicio, dataFim);
+
+        return ResponseEntity.ok(relatorio);
+
     }
 }

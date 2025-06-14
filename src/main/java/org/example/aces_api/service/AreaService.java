@@ -3,35 +3,56 @@ package org.example.aces_api.service;
 import org.example.aces_api.controller.AreaController; // Importar o controlador para referenciar os métodos
 import org.example.aces_api.dto.AreaCreateDto;
 import org.example.aces_api.dto.AreaResponseDto;
+import org.example.aces_api.dto.RelatorioDTO;
 import org.example.aces_api.exception.EntityNotFoundException;
 import org.example.aces_api.mapper.AreaMapper;
 import org.example.aces_api.model.entity.Area;
 import org.example.aces_api.model.repository.AreaRepository;
+import org.example.aces_api.model.repository.CasoAedesRepository;
+import org.example.aces_api.model.repository.FocoAedesRepository;
+import org.example.aces_api.model.repository.VisitaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.hateoas.EntityModel; // Import para EntityModel
-import org.springframework.hateoas.CollectionModel; // Import para CollectionModel
+import org.springframework.hateoas.EntityModel; 
+import org.springframework.hateoas.CollectionModel;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors; // Import para Collectors (se ainda não tiver)
+import java.util.stream.Collectors;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo; // Import estático
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn; // Import estático
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
+
 
 @Service
 public class AreaService {
 
     @Autowired
-    private AreaRepository repository;
+    private AreaRepository areaRepository;
+    @Autowired
+    private VisitaRepository visitaRepository;
+    @Autowired
+    private CasoAedesRepository casoAedesRepository;
+    @Autowired
+    private FocoAedesRepository focoAedesRepository;
 
     @Autowired
     private AreaMapper mapper;
 
-    // Tipo de retorno alterado para EntityModel<AreaResponseDto>
+    public AreaService(AreaRepository areaRepository, VisitaRepository visitaRepository,
+                       CasoAedesRepository casoAedesRepository, FocoAedesRepository focoAedesRepository) {
+        this.areaRepository = areaRepository;
+        this.visitaRepository = visitaRepository;
+        this.casoAedesRepository = casoAedesRepository;
+        this.focoAedesRepository = focoAedesRepository;
+    }
+
+      // Tipo de retorno alterado para EntityModel<AreaResponseDto>
     public EntityModel<AreaResponseDto> findById(Integer id) {
-        var area = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
+        var area = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
         AreaResponseDto dto = mapper.toDto(area);
         // Cria um EntityModel e adiciona o link de auto-referência
         return EntityModel.of(dto,
@@ -39,11 +60,10 @@ public class AreaService {
                         .withSelfRel());
     }
 
-    // Tipo de retorno alterado para EntityModel<AreaResponseDto>
     public EntityModel<AreaResponseDto> criarArea(AreaCreateDto areaCreate){
         var entity = mapper.toEntity(areaCreate);
         entity.setDataUltimaAtt(LocalDateTime.now());
-        var area = repository.save(entity);
+        var area = areaRepository.save(entity);
 
         AreaResponseDto dto = mapper.toDto(area);
         // Cria um EntityModel e adiciona o link para o recurso recém-criado
@@ -51,11 +71,11 @@ public class AreaService {
                 linkTo(methodOn(AreaController.class).getAreaById(dto.id())).withSelfRel());
     }
 
+  
     // Tipo de retorno alterado para EntityModel<AreaResponseDto>
     // Conforme solicitado anteriormente, este método não adiciona um link de auto-referência ao próprio recurso atualizado.
     public EntityModel<AreaResponseDto> atualizarArea(Integer id, AreaCreateDto areaCreate){
         var entity = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
-
         entity.setNome(areaCreate.nome());
         entity.setDescricao(areaCreate.descricao());
         entity.setRegiao(areaCreate.regiao());
@@ -63,7 +83,7 @@ public class AreaService {
         entity.setNivelRisco(areaCreate.nivelRisco());
         entity.setPrioridade(areaCreate.prioridade());
         entity.setDataUltimaAtt(LocalDateTime.now());
-
+      
         var area = repository.save(entity);
         AreaResponseDto dto = mapper.toDto(area);
         // Retorna o EntityModel sem adicionar link Self, como solicitado anteriormente
@@ -76,7 +96,7 @@ public class AreaService {
         List<EntityModel<AreaResponseDto>> areasComLinks = repository.findAll().stream()
                 .map(area -> {
                     AreaResponseDto dto = mapper.toDto(area);
-                    return EntityModel.of(dto,
+                 return EntityModel.of(dto,
                             linkTo(methodOn(AreaController.class).getAreaById(dto.id())).withSelfRel());
                 })
                 .collect(Collectors.toList());
@@ -85,9 +105,38 @@ public class AreaService {
         return CollectionModel.of(areasComLinks,
                 linkTo(methodOn(AreaController.class).getAllAreas()).withSelfRel());
     }
-
+  
     public void excluirArea(Integer id){
         var area = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
         repository.delete(area);
+      }
+  
+    public RelatorioDTO gerarRelatorio(Long areaId, LocalDate dataInicio, LocalDate dataFim) {
+
+        Area area = areaRepository.findById(Math.toIntExact(areaId))
+                .orElseThrow(() -> new RuntimeException("Área com ID " + areaId + " não encontrada."));
+
+        LocalDateTime inicioPeriodo = dataInicio.atStartOfDay();
+        LocalDateTime fimPeriodo = dataFim.atTime(23, 59, 59);
+
+        int totalVisitas = visitaRepository.countVisitasByAreaAndPeriod(areaId, inicioPeriodo, fimPeriodo);
+        int totalCasos = casoAedesRepository.countDengueByAreaAndPeriod(areaId, inicioPeriodo, fimPeriodo);
+        int totalFocos = focoAedesRepository.countFocosByAreaAndPeriod(areaId, inicioPeriodo, fimPeriodo);
+
+        double indiceDengue = (totalVisitas > 0) ? ((double) totalCasos / totalVisitas) * 1000 : 0.0;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String periodoFormatado = dataInicio.format(formatter) + " a " + dataFim.format(formatter);
+
+        return new RelatorioDTO(
+                area.getId(),
+                area.getNome(),
+                periodoFormatado,
+                totalCasos,
+                totalVisitas,
+                totalFocos,
+                indiceDengue,
+                LocalDateTime.now()
+        );
     }
 }
