@@ -141,7 +141,7 @@ public class AreaController {
         }
     }
   
-  @GetMapping("/{id}/relatorio")
+    @GetMapping("/{id}/relatorio")
     public ResponseEntity<RelatorioDTO> getRelatorioDaArea(@PathVariable Long id,
                                                            @RequestParam(name = "dataInicio", required = false) String dataInicioStr,
                                                            @RequestParam(name = "dataFim", required = false) String dataFimStr) {
