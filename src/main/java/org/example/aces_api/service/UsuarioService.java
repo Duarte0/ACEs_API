@@ -26,7 +26,6 @@ public class UsuarioService {
         this.usuarioMapper = usuarioMapper;
     }
 
-    // Criação com RequestDTO
     @Transactional
     public UsuarioResponseDTO criarUsuario(UsuarioRequestDTO usuarioRequest) {
         validarUsuarioAntesDeCriar(usuarioRequest);
@@ -39,7 +38,6 @@ public class UsuarioService {
         return usuarioMapper.toResponseDTO(usuarioSalvo);
     }
 
-    // Busca por ID
     public UsuarioResponseDTO buscarPorId(Integer id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com ID: " + id));
@@ -47,14 +45,12 @@ public class UsuarioService {
     }
 
 
-    // Listagem
     public List<UsuarioResponseDTO> listarTodos() {
         return usuarioRepository.findAll().stream()
                 .map(usuarioMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    // Atualização com UpdateDTO
     @Transactional
     public UsuarioResponseDTO atualizarUsuario(Integer id, UsuarioUpdateDTO usuarioUpdateDTO) {
         Usuario usuarioExistente = usuarioRepository.findById(id)
@@ -77,7 +73,6 @@ public class UsuarioService {
         return usuarioMapper.toResponseDTO(usuarioAtualizado);
     }
 
-    // Desativação
     @Transactional
     public void desativarUsuario(Integer id) {
         Usuario usuario = usuarioRepository.findById(id)
@@ -87,7 +82,6 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
-    // Validações
     private void validarUsuarioAntesDeCriar(UsuarioRequestDTO dto) {
         if (usuarioRepository.existsByCpf(dto.cpf())) {
             throw new DuplicatedResourceException("CPF já cadastrado: " + dto.cpf());
