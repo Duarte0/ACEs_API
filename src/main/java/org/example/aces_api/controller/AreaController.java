@@ -1,10 +1,12 @@
 package org.example.aces_api.controller;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.example.aces_api.dto.AreaCreateDto;
 import org.example.aces_api.dto.AreaResponseDto;
 import org.example.aces_api.dto.RelatorioDTO;
 import org.example.aces_api.exception.EntityNotFoundException;
+import org.example.aces_api.exception.ErrorMessage;
 import org.example.aces_api.service.AreaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,7 +28,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/areas")
-@Tag(name = "Areas", description = "Endpoints for Managing Areas") // Anotação para descrever o controlador
+@Tag(name = "Areas", description = "Endpoits para gerenciar Areas") // Anotação para descrever o controlador
 public class AreaController {
 
     @Autowired
@@ -38,16 +40,16 @@ public class AreaController {
     }
   
     @GetMapping("/buscar/{id}")
-    @Operation(summary = "Finds an Area by ID", description = "Finds an Area by ID",
-            tags = {"Areas"}, // Associa a tag "Areas" a este endpoint
-            responses = { // Define as possíveis respostas para esta operação
+    @Operation(summary = "Busca uma area por ID", description = "Busca uma area por ID",
+            tags = {"Areas"},
+            responses = {
                     @ApiResponse(description = "Success", responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = AreaResponseDto.class))), // Retorna um objeto AreaResponseDto
-                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content), //
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content), //
-                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content), //
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content), //
-                    @ApiResponse(description = "Internal Error", responseCode = "500", content = @Content) //
+                            content = @Content(schema = @Schema(implementation = AreaResponseDto.class))),
+                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
+                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Error", responseCode = "500", content = @Content)
             }
     )
     public ResponseEntity<EntityModel<AreaResponseDto>> getAreaById(@PathVariable Integer id) {
@@ -60,8 +62,8 @@ public class AreaController {
     }
 
     @PostMapping("/cadastrar")
-    @Operation(summary = "Adds a new Area",
-            description = "Adds a new Area by passing in a JSON representation of the area!",
+    @Operation(summary = "Adiciona uma nova area",
+            description = "Adiciona uma nova area",
             tags = {"Areas"}, // Associa a tag "Areas" a este endpoint
             responses = {
                     @ApiResponse(description = "Created", responseCode = "201",
@@ -77,8 +79,8 @@ public class AreaController {
     }
 
     @PutMapping("/atualizar/{id}")
-    @Operation(summary = "Updates an Area",
-            description = "Updates an Area by passing in a JSON representation of the area!",
+    @Operation(summary = "Atualiza uma area",
+            description = "Atualiza uma area",
             tags = {"Areas"}, // Associa a tag "Areas" a este endpoint
             responses = {
                     @ApiResponse(description = "Updated", responseCode = "200",
@@ -99,7 +101,7 @@ public class AreaController {
     }
 
     @GetMapping("/buscar/todos")
-    @Operation(summary = "Finds all Areas", description = "Finds all Areas",
+    @Operation(summary = "Busca todas as Areas", description = "Busca todas as Areas",
             tags = {"Areas"}, // Associa a tag "Areas" a este endpoint
             responses = {
                     @ApiResponse(description = "Success", responseCode = "200",
@@ -121,8 +123,8 @@ public class AreaController {
     }
 
     @DeleteMapping("/apagar/{id}")
-    @Operation(summary = "Deletes an Area",
-            description = "Deletes an Area by ID",
+    @Operation(summary = "Deleta uma Area",
+            description = "Deleta uma area pelo ID",
             tags = {"Areas"}, // Associa a tag "Areas" a este endpoint
             responses = {
                     @ApiResponse(description = "No Content", responseCode = "204", content = @Content), // Como não tem retorno, usa @Content padrão
@@ -140,8 +142,20 @@ public class AreaController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
-  
-  @GetMapping("/{id}/relatorio")
+
+    @Operation(
+            summary = "Gera um relatório detalhado para uma área específica",
+            description = "Calcula e retorna um relatório com totais de visitas, casos de dengue, e focos de Aedes para uma área específica dentro de um período de tempo. Se o período não for fornecido, considera os últimos 30 dias por padrão."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Relatório gerado com sucesso.",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = RelatorioDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique os parâmetros, como o formato da data (deve ser DD-MM-YYYY).",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "A área com o ID especificado não foi encontrada.",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
+    })
+    @GetMapping("/{id}/relatorio")
     public ResponseEntity<RelatorioDTO> getRelatorioDaArea(@PathVariable Long id,
                                                            @RequestParam(name = "dataInicio", required = false) String dataInicioStr,
                                                            @RequestParam(name = "dataFim", required = false) String dataFimStr) {
