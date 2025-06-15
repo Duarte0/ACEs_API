@@ -1,4 +1,4 @@
 package org.example.aces_api.dto;
 
-public class UsuarioDTO {
+public record UsuarioRequestDTO() {
 }
