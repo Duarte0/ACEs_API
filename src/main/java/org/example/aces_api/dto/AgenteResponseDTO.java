@@ -8,8 +8,7 @@ import java.time.LocalDate;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record AgenteResponseDTO(
         Integer id,
-        Integer usuarioId,
-        String usuarioNome,
+        String nome,
         String matricula,
         LocalDate dataAdmissao,
         LocalDate dataInicio,

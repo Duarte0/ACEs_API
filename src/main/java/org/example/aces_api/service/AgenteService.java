@@ -1,6 +1,7 @@
 package org.example.aces_api.service;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import org.example.aces_api.dto.AgenteRequestDTO;
 import org.example.aces_api.dto.AgenteResponseDTO;
 import org.example.aces_api.dto.AgenteUpdateDTO;
@@ -8,9 +9,12 @@ import org.example.aces_api.exception.DuplicatedResourceException;
 import org.example.aces_api.exception.EntityNotFoundException;
 import org.example.aces_api.mapper.AgenteMapper;
 import org.example.aces_api.model.entity.Agente;
-import org.example.aces_api.model.entity.Usuario;
+import org.example.aces_api.model.entity.AgenteArea;
+import org.example.aces_api.model.entity.AgenteAreaId;
+import org.example.aces_api.model.entity.Area;
+import org.example.aces_api.model.repository.AgenteAreaRepository;
 import org.example.aces_api.model.repository.AgenteRepository;
-import org.example.aces_api.model.repository.UsuarioRepository;
+import org.example.aces_api.model.repository.AreaRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -21,26 +25,24 @@ import java.util.stream.Collectors;
 public class AgenteService {
 
     private final AgenteRepository agenteRepository;
-    private final UsuarioRepository usuarioRepository;
     private final AgenteMapper agenteMapper;
+    private final AreaRepository areaRepository;
+    private final AgenteAreaRepository agenteAreaRepository;
 
-    public AgenteService(AgenteRepository agenteRepository,
-                         UsuarioRepository usuarioRepository,
-                         AgenteMapper agenteMapper) {
+
+    public AgenteService(AgenteRepository agenteRepository, AgenteMapper agenteMapper, AreaRepository areaRepository, AgenteAreaRepository agenteAreaRepository) {
         this.agenteRepository = agenteRepository;
-        this.usuarioRepository = usuarioRepository;
         this.agenteMapper = agenteMapper;
+        this.areaRepository = areaRepository;
+        this.agenteAreaRepository = agenteAreaRepository;
     }
 
     @Transactional
     public AgenteResponseDTO criarAgente(AgenteRequestDTO agenteRequest) {
         validarAgenteAntesDeCriar(agenteRequest);
 
-        Usuario usuario = usuarioRepository.findById(agenteRequest.usuarioId())
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com ID: " + agenteRequest.usuarioId()));
-
         Agente agente = agenteMapper.requestToEntity(agenteRequest);
-        agente.setUsuario(usuario);
+        agente.setAtivo(true);
 
         Agente agenteSalvo = agenteRepository.save(agente);
         return agenteMapper.toResponseDTO(agenteSalvo);
@@ -67,6 +69,10 @@ public class AgenteService {
 
         if (agenteUpdateDTO.matricula() != null) {
             agenteExistente.setMatricula(agenteUpdateDTO.matricula());
+        }
+
+        if (agenteUpdateDTO.nome() != null) {
+            agenteExistente.setNome(agenteUpdateDTO.nome());
         }
 
         // Atualiza datas se fornecidas
@@ -102,10 +108,6 @@ public class AgenteService {
         if (agenteRepository.existsByMatricula(dto.matricula())) {
             throw new DuplicatedResourceException("Matrícula já cadastrada: " + dto.matricula());
         }
-
-        if (agenteRepository.existsByUsuarioId(dto.usuarioId())) {
-            throw new DuplicatedResourceException("Usuário já vinculado a outro agente");
-        }
     }
 
     private void validarAtualizacao(Agente existente, AgenteUpdateDTO atualizado) {
@@ -116,8 +118,50 @@ public class AgenteService {
         }
     }
 
+    public AgenteResponseDTO buscarPorMatricula(String matricula) {
+        Agente agente = agenteRepository.findByMatricula(matricula)
+                .orElseThrow(() -> new EntityNotFoundException("Agente não encontrado com matrícula: " + matricula));
+        return agenteMapper.toResponseDTO(agente);
+    }
+
+    public List<AgenteResponseDTO> buscarPorNome(String nome) {
+        return agenteRepository.findByNomeContainingIgnoreCase(nome).stream()
+                .map(agenteMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     private LocalDate parseDate(String dateString) {
         return dateString != null ? LocalDate.parse(dateString) : null;
     }
 
+    @Transactional
+    public void associarArea(Integer agenteId, Integer areaId) {
+        Agente agente = agenteRepository.findById(agenteId)
+                .orElseThrow(() -> new EntityNotFoundException("Agente não encontrado com ID: " + agenteId));
+
+        Area area = areaRepository.findById(areaId)
+                .orElseThrow(() -> new EntityNotFoundException("Área não encontrada com ID: " + areaId));
+
+        if (agenteAreaRepository.existsById(new AgenteAreaId(agenteId, areaId))) {
+            throw new IllegalStateException("Esta área já está associada ao agente");
+        }
+
+        AgenteArea agenteArea = new AgenteArea(agente, area);
+        agenteAreaRepository.save(agenteArea);
+    }
+
+    public List<Area> listarAreasPorAgente(Integer agenteId) {
+        return agenteAreaRepository.findByAgenteId(agenteId)
+                .stream()
+                .map(AgenteArea::getArea)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void removerArea(Integer agenteId, Integer areaId) {
+        if (!agenteAreaRepository.existsById(new AgenteAreaId(agenteId, areaId))) {
+            throw new EntityNotFoundException("Associação não encontrada");
+        }
+        agenteAreaRepository.deleteById(new AgenteAreaId(agenteId, areaId));
+    }
 }
