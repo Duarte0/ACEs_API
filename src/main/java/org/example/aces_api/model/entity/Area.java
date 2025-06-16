@@ -1,5 +1,6 @@
 package org.example.aces_api.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.example.aces_api.dto.Risco;
 
@@ -7,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Area")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Area {
 
     @Id
@@ -17,8 +19,15 @@ public class Area {
     private String descricao;
     private String regiao;
     private int populacaoAprox;
+
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "ENUM('BAIXO','MEDIO','ALTO','MUITO_ALTO')") // Opcional
     private Risco nivelRisco;
+
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "ENUM('BAIXO','MEDIO','ALTO','MUITO_ALTO')") // Opcional
     private Risco prioridade;
+
     private LocalDateTime dataUltimaAtt;
 
     public Area() {

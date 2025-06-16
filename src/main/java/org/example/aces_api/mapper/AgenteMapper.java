@@ -6,6 +6,7 @@ import org.example.aces_api.model.entity.Agente;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.springframework.hateoas.Links;
 
 import java.time.LocalDate;
 
@@ -20,12 +21,9 @@ public interface AgenteMapper {
     @Mapping(target = "areas", ignore = true)
     Agente requestToEntity(AgenteRequestDTO dto);
 
-    @Mapping(target = "usuarioId", source = "usuario.id")
-    @Mapping(target = "usuarioNome", source = "usuario.nome")
     @Mapping(target = "_links", ignore = true)
     AgenteResponseDTO toResponseDTO(Agente entity);
 
-    // Conversor de String para LocalDate
     @Named("stringToLocalDate")
     default LocalDate stringToLocalDate(String dateString) {
         if (dateString == null || dateString.isEmpty()) {
