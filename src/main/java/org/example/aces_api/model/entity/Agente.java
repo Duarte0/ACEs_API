@@ -13,25 +13,25 @@ public class Agente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false, unique = true)
-    private Usuario usuario;
-
     private String matricula;
+
+    @Column(name = "dataAdmissao")
     private LocalDate dataAdmissao;
+
+    @Column(name = "dataInicio")
     private LocalDate dataInicio;
+
+    @Column(name = "dataFim")
     private LocalDate dataFim;
+
     private Boolean ativo = true;
+    private String nome;
 
     @OneToMany(mappedBy = "agente", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AgenteArea> areas = new HashSet<>();
 
     public Agente() {}
 
-    public Agente(Usuario usuario, String matricula) {
-        this.usuario = usuario;
-        this.matricula = matricula;
-    }
 
     public Integer getId() {
         return id;
@@ -41,13 +41,6 @@ public class Agente {
         this.id = id;
     }
 
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
 
     public String getMatricula() {
         return matricula;
@@ -98,6 +91,14 @@ public class Agente {
 
     public void setAreas(Set<AgenteArea> areas) {
         this.areas = areas;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
     }
 
     /*
