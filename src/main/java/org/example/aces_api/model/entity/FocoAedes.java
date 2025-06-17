@@ -8,12 +8,13 @@ public class FocoAedes {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id;
 
     @ManyToOne
     @JoinColumn(name = "visita_id")
     private Visita visita;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String imagem;
     private String tipoFoco;
     private int quantidade;
@@ -24,7 +25,7 @@ public class FocoAedes {
     }
 
     public FocoAedes(int id, Visita visita, String imagem, String tipoFoco, int quantidade, boolean tratado, String observacoes) {
-        this.id = (long) id;
+        this.id = id;
         this.visita = visita;
         this.imagem = imagem;
         this.tipoFoco = tipoFoco;
@@ -33,11 +34,11 @@ public class FocoAedes {
         this.observacoes = observacoes;
     }
 
-    public Long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
