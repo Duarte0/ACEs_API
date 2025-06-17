@@ -3,7 +3,7 @@ package org.example.aces_api.unitests.mapper;
 import org.example.aces_api.dto.RelatorioDTO;
 import org.example.aces_api.model.entity.Area;
 import org.example.aces_api.model.repository.AreaRepository;
-import org.example.aces_api.model.repository.CasoAedesRepository;
+import org.example.aces_api.model.repository.CasoDengueRepository;
 import org.example.aces_api.model.repository.FocoAedesRepository;
 import org.example.aces_api.model.repository.VisitaRepository;
 import org.example.aces_api.service.AreaService;
@@ -32,7 +32,7 @@ public class RelatorioTest {
     @Mock
     private VisitaRepository visitaRepository;
     @Mock
-    private CasoAedesRepository casoAedesRepository;
+    private CasoDengueRepository casoDengueRepository;
     @Mock
     private FocoAedesRepository focoAedesRepository;
 
@@ -61,7 +61,7 @@ public class RelatorioTest {
 
         when(areaRepository.findById(Math.toIntExact(areaId))).thenReturn(Optional.of(areaMock));
         when(visitaRepository.countVisitasByAreaAndPeriod(anyLong(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(100);
-        when(casoAedesRepository.countDengueByAreaAndPeriod(anyLong(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(10);
+        when(casoDengueRepository.countDengueByAreaAndPeriod(anyLong(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(10);
         when(focoAedesRepository.countFocosByAreaAndPeriod(anyLong(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(5);
 
         RelatorioDTO resultado = areaService.gerarRelatorio(areaId, dataInicio, dataFim);
@@ -95,7 +95,7 @@ public class RelatorioTest {
     void deveCalcularIndiceDengueComoZeroQuandoNaoHaVisitas() {
         when(areaRepository.findById(Math.toIntExact(areaId))).thenReturn(Optional.of(areaMock));
         when(visitaRepository.countVisitasByAreaAndPeriod(anyLong(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(0);
-        when(casoAedesRepository.countDengueByAreaAndPeriod(anyLong(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(5); // Mesmo com casos
+        when(casoDengueRepository.countDengueByAreaAndPeriod(anyLong(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(5); // Mesmo com casos
         when(focoAedesRepository.countFocosByAreaAndPeriod(anyLong(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(2);
 
         RelatorioDTO resultado = areaService.gerarRelatorio(areaId, dataInicio, dataFim);
