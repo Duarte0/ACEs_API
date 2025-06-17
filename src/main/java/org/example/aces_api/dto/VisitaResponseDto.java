@@ -13,7 +13,5 @@ public record VisitaResponseDto(
         BigDecimal temperatura,
         Boolean foiRealizada
 ) {
-    public VisitaResponseDto attStatus(String novoStatus) {
-        return new VisitaResponseDto(id, agenteId, enderecoId, dataHora, observacoes, novoStatus, temperatura, foiRealizada);
-    }
+
 }

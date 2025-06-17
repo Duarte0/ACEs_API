@@ -24,7 +24,7 @@ public class AgenteController {
         this.agenteService = agenteService;
     }
 
-    @PostMapping
+    @PostMapping("/cadastrar")
     public ResponseEntity<AgenteResponseDTO> criarAgente(@Valid @RequestBody AgenteRequestDTO agenteRequestDTO) {
         AgenteResponseDTO agenteCriado = agenteService.criarAgente(agenteRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(agenteCriado);

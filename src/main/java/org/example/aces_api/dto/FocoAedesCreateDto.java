@@ -2,18 +2,19 @@ package org.example.aces_api.dto;
 
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public record FocoAedesCreateDto(
-        @NotBlank
+        @NotNull
         Long visitaId,
         String imagem,
-        @NotBlank
+        @NotNull
         TipoFoco tipoFoco,
-        @NotBlank
+        @NotNull
         Integer quantidade,
-        @NotBlank
+        @NotNull
         Boolean tratado,
-        @NotBlank
+        @NotNull
         String observacoes
 ) {
 }

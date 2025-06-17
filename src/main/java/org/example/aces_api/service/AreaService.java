@@ -8,7 +8,7 @@ import org.example.aces_api.exception.EntityNotFoundException;
 import org.example.aces_api.mapper.AreaMapper;
 import org.example.aces_api.model.entity.Area;
 import org.example.aces_api.model.repository.AreaRepository;
-import org.example.aces_api.model.repository.CasoAedesRepository;
+import org.example.aces_api.model.repository.CasoDengueRepository;
 import org.example.aces_api.model.repository.FocoAedesRepository;
 import org.example.aces_api.model.repository.VisitaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ public class AreaService {
     @Autowired
     private VisitaRepository visitaRepository;
     @Autowired
-    private CasoAedesRepository casoAedesRepository;
+    private CasoDengueRepository casoAedesRepository;
     @Autowired
     private FocoAedesRepository focoAedesRepository;
 
@@ -43,7 +43,7 @@ public class AreaService {
     private AreaMapper mapper;
 
     public AreaService(AreaRepository areaRepository, VisitaRepository visitaRepository,
-                       CasoAedesRepository casoAedesRepository, FocoAedesRepository focoAedesRepository) {
+                       CasoDengueRepository casoAedesRepository, FocoAedesRepository focoAedesRepository) {
         this.areaRepository = areaRepository;
         this.visitaRepository = visitaRepository;
         this.casoAedesRepository = casoAedesRepository;

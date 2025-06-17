@@ -10,12 +10,10 @@ public class Visita {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+    private int id;
     @ManyToOne
     @JoinColumn(name = "agente_id")
     private Agente agente;
-
     @ManyToOne
     @JoinColumn(name = "endereco_id")
     private Endereco endereco;
@@ -29,7 +27,7 @@ public class Visita {
     public Visita() {
     }
 
-    public Visita(Long id, Agente agente, Endereco endereco, LocalDateTime dataHora, String observacoes, String status, BigDecimal temperatura, boolean foiRealizada) {
+    public Visita(int id, Agente agente, Endereco endereco, LocalDateTime dataHora, String observacoes, String status, BigDecimal temperatura, boolean foiRealizada) {
         this.id = id;
         this.agente = agente;
         this.endereco = endereco;
@@ -40,11 +38,11 @@ public class Visita {
         this.foiRealizada = foiRealizada;
     }
 
-    public Long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
