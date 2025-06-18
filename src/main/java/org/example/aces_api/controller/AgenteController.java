@@ -94,9 +94,8 @@ public class AgenteController {
     }
 
     @GetMapping("/buscar")
-    public ResponseEntity<List<AgenteResponseDTO>> buscarPorNome(
-            @RequestParam String nome) {
-        List<AgenteResponseDTO> agentes = agenteService.buscarPorNome(nome);
+    public ResponseEntity<List<AgenteResponseDTO>> listarTodosAgentes() {
+        List<AgenteResponseDTO> agentes = agenteService.listarTodos();
         return agentes.isEmpty()
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.ok(agentes);

@@ -10,7 +10,7 @@ import java.time.LocalDate;
 public class Paciente {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @ManyToOne
@@ -19,7 +19,11 @@ public class Paciente {
 
     private String nome;
     private LocalDate dataNascimento;
+
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "ENUM('MASCULINO', 'FEMININO', 'OUTROS')")
     private Sexo sexo;
+
     private String cpf;
     private String cartaoSUS;
     private String telefone;
