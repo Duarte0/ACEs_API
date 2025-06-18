@@ -4,6 +4,7 @@ import org.example.aces_api.model.entity.Area;
 import org.example.aces_api.model.entity.CasoDengue;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -26,5 +27,9 @@ public interface CasoDengueRepository extends JpaRepository<CasoDengue, Long> {
 
     @Query("SELECT COUNT(c) FROM CasoDengue c WHERE c.visita.endereco.area.id = :areaId " +
             "AND c.visita.dataHora BETWEEN :inicio AND :fim")
-    int countDengueByAreaAndPeriod(Long areaId, LocalDateTime dataGeracao, LocalDateTime fim);
+    int countDengueByAreaAndPeriod(
+            @Param("areaId") Long areaId,
+            @Param("inicio") LocalDateTime dataGeracao, // <--- CORRIGIDO: Mapeia 'dataGeracao' para ':inicio'
+            @Param("fim") LocalDateTime fim            // <--- CORRIGIDO: Mapeia 'fim' para ':fim'
+    );
 }
