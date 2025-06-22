@@ -2,6 +2,7 @@ package org.example.aces_api.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -58,7 +59,18 @@ public class FocoAedesImagemController {
 
         return ResponseEntity.ok(response);
     }
+
+
     @GetMapping("/{id}/imagem-direta")
+    @Operation(summary = "Obter imagem de um foco como arquivo",
+            description = "Recupera a imagem associada a um foco de Aedes diretamente como um arquivo de imagem (ex: image/jpeg).")
+    @ApiResponses(value = {
+            // A resposta de sucesso agora especifica o mediaType de imagem
+            @ApiResponse(responseCode = "200", description = "Imagem recuperada com sucesso",
+                    content = @Content(mediaType = "image/*")),
+            @ApiResponse(responseCode = "404", description = "Foco não encontrado ou sem imagem"),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    })
     public ResponseEntity<byte[]> obterImagemDireta(@PathVariable Long id) {
         String imagemBase64 = focoAedesService.obterImagemFoco(id);
 

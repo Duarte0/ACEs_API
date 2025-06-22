@@ -72,9 +72,10 @@ public class VisitaController {
     @Operation(summary = "Buscar visita por ID",
             description = "Retorna uma visita específica pelo seu ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Operação bem-sucedida"),
-            @ApiResponse(responseCode = "404", description = "Visita não encontrada"),
-            @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+            @ApiResponse(responseCode = "200", description = "Operação bem-sucedida",
+                    content = @Content(schema = @Schema(implementation = VisitaResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "Visita não encontrada", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content)
     })
     public ResponseEntity<VisitaResponseDto> buscarVisitaPorId(
             @PathVariable
