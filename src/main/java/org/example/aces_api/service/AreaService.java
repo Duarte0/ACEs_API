@@ -110,11 +110,11 @@ public class AreaService {
         var area = areaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
         areaRepository.delete(area);
       }
-  
-    public RelatorioDTO gerarRelatorio(Long areaId, LocalDate dataInicio, LocalDate dataFim) {
+
+    public EntityModel<RelatorioDTO> gerarRelatorio(Long areaId, LocalDate dataInicio, LocalDate dataFim) {
 
         Area area = areaRepository.findById(Math.toIntExact(areaId))
-                .orElseThrow(() -> new RuntimeException("Área com ID " + areaId + " não encontrada."));
+                .orElseThrow(() -> new EntityNotFoundException("Área com ID " + areaId + " não encontrada."));
 
         LocalDateTime inicioPeriodo = dataInicio.atStartOfDay();
         LocalDateTime fimPeriodo = dataFim.atTime(23, 59, 59);
@@ -128,7 +128,7 @@ public class AreaService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String periodoFormatado = dataInicio.format(formatter) + " a " + dataFim.format(formatter);
 
-        return new RelatorioDTO(
+        RelatorioDTO relatorioDTO = new RelatorioDTO(
                 area.getId(),
                 area.getNome(),
                 periodoFormatado,
@@ -137,6 +137,15 @@ public class AreaService {
                 totalFocos,
                 indiceDengue,
                 LocalDateTime.now()
+        );
+
+        return EntityModel.of(relatorioDTO,
+                linkTo(methodOn(AreaController.class)
+                        .getRelatorioDaArea(areaId, dataInicio.toString(), dataFim.toString()))
+                        .withSelfRel(),
+                linkTo(methodOn(AreaController.class)
+                        .getAreaById(Math.toIntExact(areaId)))
+                        .withRel("area")
         );
     }
 }
