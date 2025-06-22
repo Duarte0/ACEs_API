@@ -1,5 +1,6 @@
 package org.example.aces_api.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.example.aces_api.dto.AreaCreateDto;
@@ -23,8 +24,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse; // Importar ApiRespo
 import io.swagger.v3.oas.annotations.tags.Tag; // Importar Tag
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
+import java.time.format.DateTimeParseException;
 
 @RestController
 @RequestMapping("/api/areas")
@@ -34,11 +34,11 @@ public class AreaController {
     @Autowired
     private AreaService areaService;
 
-  
-  public AreaController(AreaService areaService) {
+
+    public AreaController(AreaService areaService) {
         this.areaService = areaService;
     }
-  
+
     @GetMapping("/buscar/{id}")
     @Operation(summary = "Busca uma area por ID", description = "Busca uma area por ID",
             tags = {"Areas"},
@@ -145,27 +145,34 @@ public class AreaController {
 
     @Operation(
             summary = "Gera um relatório detalhado para uma área específica",
-            description = "Calcula e retorna um relatório com totais de visitas, casos de dengue, e focos de Aedes para uma área específica dentro de um período de tempo. Se o período não for fornecido, considera os últimos 30 dias por padrão."
+            description = "Calcula e retorna um relatório com totais de visitas, casos de dengue, e focos de Aedes para uma área específica dentro de um período de tempo. Se o período não for fornecido, considera os últimos 30 dias por padrão. A resposta inclui links HATEOAS para navegação."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Relatório gerado com sucesso.",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = RelatorioDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique os parâmetros, como o formato da data (deve ser DD-MM-YYYY).",
+            @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique os parâmetros, como o formato da data (deve ser yyyy-MM-dd).",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
             @ApiResponse(responseCode = "404", description = "A área com o ID especificado não foi encontrada.",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
     })
     @GetMapping("/{id}/relatorio")
-    public ResponseEntity<RelatorioDTO> getRelatorioDaArea(@PathVariable Long id,
-                                                           @RequestParam(name = "dataInicio", required = false) String dataInicioStr,
-                                                           @RequestParam(name = "dataFim", required = false) String dataFimStr) {
+    public ResponseEntity<EntityModel<RelatorioDTO>> getRelatorioDaArea(
+            @Parameter(description = "ID da área para a qual o relatório será gerado", required = true, example = "101")
+            @PathVariable Long id,
+            @Parameter(description = "Data de início do período (formato: yyyy-MM-dd)", example = "2025-05-01")
+            @RequestParam(name = "dataInicio", required = false) String dataInicioStr,
+            @Parameter(description = "Data de fim do período (formato: yyyy-MM-dd)", example = "2025-05-31")
+            @RequestParam(name = "dataFim", required = false) String dataFimStr) {
+        try {
+            LocalDate dataFim = (dataFimStr != null) ? LocalDate.parse(dataFimStr) : LocalDate.now();
+            LocalDate dataInicio = (dataInicioStr != null) ? LocalDate.parse(dataInicioStr) : dataFim.minusDays(30);
 
-        LocalDate dataFim = (dataFimStr == null) ? LocalDate.now() : LocalDate.parse(dataFimStr);
-        LocalDate dataInicio = (dataInicioStr == null) ? LocalDate.now() : LocalDate.parse(dataInicioStr);
+            EntityModel<RelatorioDTO> relatorioModel = areaService.gerarRelatorio(id, dataInicio, dataFim);
 
-        RelatorioDTO relatorio = areaService.gerarRelatorio(id, dataInicio, dataFim);
+            return ResponseEntity.ok(relatorioModel);
 
-        return ResponseEntity.ok(relatorio);
-
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Formato de data inválido. Use o formato yyyy-MM-dd.", e);
+        }
     }
 }
