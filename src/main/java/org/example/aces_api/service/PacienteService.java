@@ -10,6 +10,9 @@ import org.example.aces_api.model.repository.PacienteRepository;
 import org.example.aces_api.model.repository.EnderecoRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.stereotype.Service;
@@ -32,6 +35,7 @@ public class PacienteService {
     @Autowired
     private EnderecoRepository enderecoRepository;
 
+    @Cacheable(value = "pacientes", key = "#id", unless = "#result == null")
     public EntityModel<PacienteResponseDto> findById(Integer id) {
         var paciente = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Paciente com ID " + id + " não encontrado."));
@@ -41,6 +45,7 @@ public class PacienteService {
         );
     }
 
+    @CacheEvict(value = "pacientes", allEntries = true)
     public EntityModel<PacienteResponseDto> criarPaciente(PacienteCreateDto pacienteCreateDto){
         var entity = mapper.toEntity(pacienteCreateDto);
 
@@ -57,6 +62,8 @@ public class PacienteService {
         );
     }
 
+    @CachePut(value = "pacientes", key = "#id")
+    @CacheEvict(value = "pacientes", key = "'allPacientes'")
     public EntityModel<PacienteResponseDto> atualizarPaciente(Integer id, PacienteCreateDto pacienteCreateDto){
         var entity = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Paciente com ID " + id + " não encontrado."));
 
@@ -77,6 +84,7 @@ public class PacienteService {
         return EntityModel.of(dto);
     }
 
+    @Cacheable(value = "pacientes", key = "'allPacientes'")
     public CollectionModel<EntityModel<PacienteResponseDto>> findAll(){
         List<EntityModel<PacienteResponseDto>> pacientesComLinks = repository.findAll().stream()
                 .map(paciente -> {
@@ -91,6 +99,7 @@ public class PacienteService {
                 linkTo(methodOn(PacienteController.class).getAllPacientes()).withSelfRel());
     }
 
+    @CacheEvict(value = "pacientes", allEntries = true)
     public void excluirPaciente(Integer id){
         var paciente = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Paciente com ID " + id + " não encontrado."));
         repository.delete(paciente);
