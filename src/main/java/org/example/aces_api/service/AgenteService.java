@@ -59,12 +59,13 @@ public class AgenteService {
         return agenteMapper.toResponseDTO(agente);
     }
 
-    @Cacheable(value = "agentes", key = "allAgentes")
+    @Cacheable(value = "agentes", key = "'allAgentes'")
     public List<AgenteResponseDTO> listarTodos() {
         return agenteRepository.findAll().stream()
                 .map(agenteMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
+
 
     @CachePut(value = "agentes", key = "#id")
     @CacheEvict(value="agentes", key="'allAgentes'")
