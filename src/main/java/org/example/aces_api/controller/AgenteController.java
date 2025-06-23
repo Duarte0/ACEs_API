@@ -40,17 +40,6 @@ public class AgenteController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<AgenteResponseDTO>> listarTodos(
-            @RequestParam(required = false) Boolean ativo) {
-
-        List<AgenteResponseDTO> agentes = agenteService.listarTodos();
-
-        return agentes.isEmpty()
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.ok(agentes);
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<AgenteResponseDTO> atualizarAgente(
             @PathVariable Integer id,
