@@ -10,3 +10,4 @@ public class DuplicatedResourceException extends RuntimeException {
         super(String.format("%s já existe com %s: '%s'", resourceName, fieldName, fieldValue));
     }
 }
+
