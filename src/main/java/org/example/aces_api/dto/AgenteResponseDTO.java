@@ -15,4 +15,8 @@ public record AgenteResponseDTO(
         LocalDate dataFim,
         Boolean ativo,
         Links _links
-) {}
+) {
+    public AgenteResponseDTO withLinks(Links links) {
+        return new AgenteResponseDTO(id, nome, matricula, dataAdmissao, dataInicio, dataFim, ativo, links);
+    }
+}
