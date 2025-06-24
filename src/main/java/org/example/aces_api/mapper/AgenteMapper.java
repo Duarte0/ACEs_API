@@ -3,9 +3,8 @@ package org.example.aces_api.mapper;
 import org.example.aces_api.dto.AgenteRequestDTO;
 import org.example.aces_api.dto.AgenteResponseDTO;
 import org.example.aces_api.model.entity.Agente;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
+import org.mapstruct.*;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Links;
 
 import java.time.LocalDate;
@@ -30,5 +29,16 @@ public interface AgenteMapper {
             return null;
         }
         return LocalDate.parse(dateString);
+    }
+
+    @AfterMapping
+    default void addLinks(@MappingTarget AgenteResponseDTO dto, Agente agente) {
+        Links links = Links.of(
+                Link.of("/api/agentes/" + agente.getId()).withSelfRel(),
+                Link.of("/api/agentes/" + agente.getId() + "/areas").withRel("areas"),
+                Link.of("/api/agentes/" + agente.getId() + "/ativar").withRel("ativar").withType("PATCH"),
+                Link.of("/api/agentes/" + agente.getId() + "/desativar").withRel("desativar").withType("PATCH")
+        );
+        dto.withLinks(links);
     }
 }
