@@ -100,19 +100,4 @@ public class Agente {
     public void setNome(String nome) {
         this.nome = nome;
     }
-
-    /*
-    public void adicionarArea(Area area) {
-        AgenteArea agenteArea = new AgenteArea(this, area);
-        areas.add(agenteArea);
-        area.getAgentes().add(agenteArea);
-    }
-
-    public void removerArea(Area area) {
-        AgenteArea agenteArea = new AgenteArea(this, area);
-        area.getAgentes().remove(agenteArea);
-        areas.remove(agenteArea);
-    }
-
-     */
 }
