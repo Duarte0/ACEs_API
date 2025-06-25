@@ -4,13 +4,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record VisitaResponseDto(
-        Integer id,
-        Integer agenteId,
-        Integer enderecoId,
+        int id,
+        int agenteId,
+        int enderecoId,
         LocalDateTime dataHora,
         String observacoes,
         String status,
-        BigDecimal temperatura,
         Boolean foiRealizada
 ) {
 

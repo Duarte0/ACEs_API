@@ -19,6 +19,5 @@ public record VisitaCreateDto(
         @NotBlank
         @Size(max = 50)
         String status,
-        BigDecimal temperatura,
         Boolean foiRealizada
 ) {}

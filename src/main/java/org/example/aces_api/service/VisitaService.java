@@ -54,7 +54,6 @@ public class VisitaService {
         visita.setDataHora(visitaDto.dataHora());
         visita.setObservacoes(visitaDto.observacoes());
         visita.setStatus(visitaDto.status());
-        visita.setTemperatura(visitaDto.temperatura());
         visita.setFoiRealizada(visitaDto.foiRealizada());
         Visita visitaSalva = visitaRepository.save(visita);
         return visitaMapper.toDto(visitaSalva);
