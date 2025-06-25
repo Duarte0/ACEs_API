@@ -11,6 +11,9 @@ import org.example.aces_api.model.repository.EnderecoRepository;
 import org.example.aces_api.model.repository.AreaRepository; // Importar AreaRepository
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Service;
@@ -31,8 +34,9 @@ public class EnderecoService {
     private EnderecoMapper mapper;
 
     @Autowired
-    private AreaRepository areaRepository; // Para buscar a entidade Area
+    private AreaRepository areaRepository;
 
+    @Cacheable(value = "enderecos", key = "#id", unless = "#result == null")
     public EntityModel<EnderecoResponseDto> findById(Integer id) {
         var endereco = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Endereço com ID " + id + " não encontrado."));
@@ -42,13 +46,13 @@ public class EnderecoService {
         );
     }
 
+    @CacheEvict(value = "enderecos", allEntries = true)
     public EntityModel<EnderecoResponseDto> criarEndereco(EnderecoCreateDto enderecoCreateDto) {
-        // Busca a entidade Area primeiro para associar ao Endereco
         Area area = areaRepository.findById(enderecoCreateDto.area_id())
                 .orElseThrow(() -> new EntityNotFoundException("Área com ID " + enderecoCreateDto.area_id() + " não encontrada."));
 
         Endereco entity = mapper.toEntity(enderecoCreateDto);
-        entity.setArea(area); // Associa a entidade Area ao Endereco
+        entity.setArea(area);
 
         var endereco = repository.save(entity);
         EnderecoResponseDto dto = mapper.toDto(endereco);
@@ -57,6 +61,8 @@ public class EnderecoService {
         );
     }
 
+    @CachePut(value = "enderecos", key = "#id")
+    @CacheEvict(value = "enderecos", key = "'allEnderecos'")
     public EntityModel<EnderecoResponseDto> atualizarEndereco(Integer id, EnderecoCreateDto enderecoCreateDto) {
         var entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Endereço com ID " + id + " não encontrado."));
@@ -80,6 +86,7 @@ public class EnderecoService {
         return EntityModel.of(dto);
     }
 
+    @Cacheable(value = "enderecos", key = "'allEnderecos'")
     public CollectionModel<EntityModel<EnderecoResponseDto>> findAll() {
         List<EntityModel<EnderecoResponseDto>> enderecosComLinks = repository.findAll().stream()
                 .map(endereco -> {
@@ -94,6 +101,7 @@ public class EnderecoService {
                 linkTo(methodOn(EnderecoController.class).getAllEnderecos()).withSelfRel());
     }
 
+    @CacheEvict(value = "enderecos", allEntries = true)
     public void excluirEndereco(Integer id) {
         var endereco = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Endereço com ID " + id + " não encontrado."));

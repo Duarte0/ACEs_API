@@ -15,6 +15,9 @@ import org.example.aces_api.model.entity.Area;
 import org.example.aces_api.model.repository.AgenteAreaRepository;
 import org.example.aces_api.model.repository.AgenteRepository;
 import org.example.aces_api.model.repository.AreaRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -37,6 +40,7 @@ public class AgenteService {
         this.agenteAreaRepository = agenteAreaRepository;
     }
 
+    @CacheEvict(value = "agentes", allEntries = true)
     @Transactional
     public AgenteResponseDTO criarAgente(AgenteRequestDTO agenteRequest) {
         validarAgenteAntesDeCriar(agenteRequest);
@@ -48,18 +52,23 @@ public class AgenteService {
         return agenteMapper.toResponseDTO(agenteSalvo);
     }
 
+    @Cacheable(value = "agentes", key = "#id")
     public AgenteResponseDTO buscarPorId(Integer id) {
         Agente agente = agenteRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Agente não encontrado com ID: " + id));
         return agenteMapper.toResponseDTO(agente);
     }
 
+    @Cacheable(value = "agentes", key = "'allAgentes'")
     public List<AgenteResponseDTO> listarTodos() {
         return agenteRepository.findAll().stream()
                 .map(agenteMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
+
+    @CachePut(value = "agentes", key = "#id")
+    @CacheEvict(value="agentes", key="'allAgentes'")
     @Transactional
     public AgenteResponseDTO atualizarAgente(Integer id, AgenteUpdateDTO agenteUpdateDTO) {
         Agente agenteExistente = agenteRepository.findById(id)
@@ -88,6 +97,7 @@ public class AgenteService {
         return agenteMapper.toResponseDTO(agenteAtualizado);
     }
 
+    @CacheEvict(value = "agentes", key = "#id", allEntries = true)
     @Transactional
     public void desativarAgente(Integer id) {
         Agente agente = agenteRepository.findById(id)
@@ -118,6 +128,7 @@ public class AgenteService {
         }
     }
 
+    @Cacheable(value = "agentes", key = "#matricula")
     public AgenteResponseDTO buscarPorMatricula(String matricula) {
         Agente agente = agenteRepository.findByMatricula(matricula)
                 .orElseThrow(() -> new EntityNotFoundException("Agente não encontrado com matrícula: " + matricula));
@@ -150,6 +161,7 @@ public class AgenteService {
         agenteAreaRepository.save(agenteArea);
     }
 
+    @Cacheable(value = "agentesAreas", key = "#agenteId")
     public List<Area> listarAreasPorAgente(Integer agenteId) {
         return agenteAreaRepository.findByAgenteId(agenteId)
                 .stream()

@@ -32,6 +32,7 @@ public class AgenteController {
         this.agenteService = agenteService;
     }
 
+
     @Operation(
             summary = "Criar um novo agente",
             description = "Registra um novo agente no sistema com os dados fornecidos"
@@ -136,6 +137,7 @@ public class AgenteController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class)))
     })
+
     @PutMapping("/{id}")
     public ResponseEntity<EntityModel<AgenteResponseDTO>> atualizarAgente(
             @PathVariable Integer id,
@@ -154,20 +156,12 @@ public class AgenteController {
     }
 
     @Operation(
-            summary = "Atualizar agente",
-            description = "Atualiza os dados de um agente existente"
+            summary = "Ativar agente",
+            description = "Altera o status de um agente para ativo"
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Agente atualizado com sucesso",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = AgenteResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "204", description = "Agente ativado com sucesso"),
             @ApiResponse(responseCode = "404", description = "Agente não encontrado",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflito - Nova matrícula já em uso",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class)))
     })
@@ -238,6 +232,7 @@ public class AgenteController {
             @ApiResponse(responseCode = "204", description = "Nenhum agente encontrado")
     })
     @GetMapping("/buscar")
+
     public ResponseEntity<CollectionModel<EntityModel<AgenteResponseDTO>>> buscarPorNome(
             @RequestParam String nome) {
         List<AgenteResponseDTO> agentes = agenteService.buscarPorNome(nome);

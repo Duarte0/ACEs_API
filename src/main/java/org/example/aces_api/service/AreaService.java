@@ -8,10 +8,13 @@ import org.example.aces_api.exception.EntityNotFoundException;
 import org.example.aces_api.mapper.AreaMapper;
 import org.example.aces_api.model.entity.Area;
 import org.example.aces_api.model.repository.AreaRepository;
-import org.example.aces_api.model.repository.CasoAedesRepository;
+import org.example.aces_api.model.repository.CasoDengueRepository;
 import org.example.aces_api.model.repository.FocoAedesRepository;
 import org.example.aces_api.model.repository.VisitaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.hateoas.EntityModel; 
 import org.springframework.hateoas.CollectionModel;
@@ -35,7 +38,7 @@ public class AreaService {
     @Autowired
     private VisitaRepository visitaRepository;
     @Autowired
-    private CasoAedesRepository casoAedesRepository;
+    private CasoDengueRepository casoAedesRepository;
     @Autowired
     private FocoAedesRepository focoAedesRepository;
 
@@ -43,14 +46,14 @@ public class AreaService {
     private AreaMapper mapper;
 
     public AreaService(AreaRepository areaRepository, VisitaRepository visitaRepository,
-                       CasoAedesRepository casoAedesRepository, FocoAedesRepository focoAedesRepository) {
+                       CasoDengueRepository casoAedesRepository, FocoAedesRepository focoAedesRepository) {
         this.areaRepository = areaRepository;
         this.visitaRepository = visitaRepository;
         this.casoAedesRepository = casoAedesRepository;
         this.focoAedesRepository = focoAedesRepository;
     }
 
-      // Tipo de retorno alterado para EntityModel<AreaResponseDto>
+    @Cacheable(value = "areas", key = "#id", unless = "#result == null")
     public EntityModel<AreaResponseDto> findById(Integer id) {
         var area = areaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
         AreaResponseDto dto = mapper.toDto(area);
@@ -60,6 +63,7 @@ public class AreaService {
                         .withSelfRel());
     }
 
+    @CacheEvict(value = "areas", allEntries = true)
     public EntityModel<AreaResponseDto> criarArea(AreaCreateDto areaCreate){
         var entity = mapper.toEntity(areaCreate);
         entity.setDataUltimaAtt(LocalDateTime.now());
@@ -71,9 +75,8 @@ public class AreaService {
                 linkTo(methodOn(AreaController.class).getAreaById(dto.id())).withSelfRel());
     }
 
-  
-    // Tipo de retorno alterado para EntityModel<AreaResponseDto>
-    // Conforme solicitado anteriormente, este método não adiciona um link de auto-referência ao próprio recurso atualizado.
+    @CachePut(value = "areas", key = "#id")
+    @CacheEvict(value = "areas", key = "'allAreas'")
     public EntityModel<AreaResponseDto> atualizarArea(Integer id, AreaCreateDto areaCreate){
         var entity = areaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
         entity.setNome(areaCreate.nome());
@@ -90,9 +93,9 @@ public class AreaService {
         return EntityModel.of(dto);
     }
 
-    // Tipo de retorno alterado para CollectionModel<EntityModel<AreaResponseDto>>
+    @Cacheable(value = "areas", key = "'allAreas'")
     public CollectionModel<EntityModel<AreaResponseDto>> findAll(){
-        // Mapeia cada Area para AreaResponseDto, então encapsula em EntityModel com link Self
+
         List<EntityModel<AreaResponseDto>> areasComLinks = areaRepository.findAll().stream()
                 .map(area -> {
                     AreaResponseDto dto = mapper.toDto(area);
@@ -101,20 +104,20 @@ public class AreaService {
                 })
                 .collect(Collectors.toList());
 
-        // Retorna uma CollectionModel da lista de EntityModels, com um link Self para a própria coleção
         return CollectionModel.of(areasComLinks,
                 linkTo(methodOn(AreaController.class).getAllAreas()).withSelfRel());
     }
-  
+
+    @CacheEvict(value = "areas", key = "#id")
     public void excluirArea(Integer id){
         var area = areaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Area com ID " + id + " não encontrada."));
         areaRepository.delete(area);
       }
-  
-    public RelatorioDTO gerarRelatorio(Long areaId, LocalDate dataInicio, LocalDate dataFim) {
+
+    public EntityModel<RelatorioDTO> gerarRelatorio(Long areaId, LocalDate dataInicio, LocalDate dataFim) {
 
         Area area = areaRepository.findById(Math.toIntExact(areaId))
-                .orElseThrow(() -> new RuntimeException("Área com ID " + areaId + " não encontrada."));
+                .orElseThrow(() -> new EntityNotFoundException("Área com ID " + areaId + " não encontrada."));
 
         LocalDateTime inicioPeriodo = dataInicio.atStartOfDay();
         LocalDateTime fimPeriodo = dataFim.atTime(23, 59, 59);
@@ -128,7 +131,7 @@ public class AreaService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String periodoFormatado = dataInicio.format(formatter) + " a " + dataFim.format(formatter);
 
-        return new RelatorioDTO(
+        RelatorioDTO relatorioDTO = new RelatorioDTO(
                 area.getId(),
                 area.getNome(),
                 periodoFormatado,
@@ -137,6 +140,15 @@ public class AreaService {
                 totalFocos,
                 indiceDengue,
                 LocalDateTime.now()
+        );
+
+        return EntityModel.of(relatorioDTO,
+                linkTo(methodOn(AreaController.class)
+                        .getRelatorioDaArea(areaId, dataInicio.toString(), dataFim.toString()))
+                        .withSelfRel(),
+                linkTo(methodOn(AreaController.class)
+                        .getAreaById(Math.toIntExact(areaId)))
+                        .withRel("area")
         );
     }
 }
