@@ -6,8 +6,8 @@ import org.example.aces_api.model.entity.Visita;
 import java.time.LocalDateTime;
 
 public record FocoAedesResponseDto(
-        Long id,
-        Long visitaId,
+        int id,
+        int visitaId,
         String imagem,
         String tipoFoco,
         Integer quantidade,
@@ -15,5 +15,6 @@ public record FocoAedesResponseDto(
         String observacoes,
         LocalDateTime dataVisita
 ) {
+
 }
 

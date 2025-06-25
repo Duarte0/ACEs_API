@@ -101,4 +101,5 @@ public class Visita {
     public void setFoiRealizada(boolean foiRealizada) {
         this.foiRealizada = foiRealizada;
     }
+
 }
